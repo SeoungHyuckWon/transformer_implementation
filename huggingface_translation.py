@@ -56,6 +56,7 @@ prefix = "translate English to Korean: "
 
 data_collator = DataCollatorForSeq2Seq(tokenizer=tokenizer, model=checkpoint)
 books = train.train_test_split(test_size=0.2)
+tokenized_books = books.map(preprocess_function, batched=True)
 metric = evaluate.load("sacrebleu")
 model = AutoModelForSeq2SeqLM.from_pretrained(checkpoint)
 
@@ -69,15 +70,15 @@ training_args = Seq2SeqTrainingArguments(
     save_total_limit=3,
     num_train_epochs=2,
     predict_with_generate=True,
-    fp16=True,
-    push_to_hub=True,
+    fp16=False,
+    push_to_hub=False,
 )
 
 trainer = Seq2SeqTrainer(
     model=model,
     args=training_args,
-    train_dataset=books["train"],
-    eval_dataset=books["test"],
+    train_dataset=tokenized_books["train"],
+    eval_dataset=tokenized_books["test"],
     tokenizer=tokenizer,
     data_collator=data_collator,
     compute_metrics=compute_metrics,
